@@ -2,7 +2,6 @@
 ## Author: Stanislas Daniel Claude Dolcini
 ## Contribs: /
 ##
-
 cmake_minimum_required(VERSION 3.7)
 set(PROJECT_NAME "SDL2Test")
 project(${PROJECT_NAME})
@@ -19,9 +18,14 @@ find_package(CAIRO REQUIRED)
 message("Including Cairo from: ${CAIRO_INCLUDE_DIRS}")
 include_directories(${CAIRO_INCLUDE_DIRS})
 
+find_package(FREETYPE REQUIRED)
+message("Including Freetype from: ${FREETYPE_INCLUDE_DIRS}")
+include_directories(${FREETYPE_INCLUDE_DIRS})
+
 add_executable(${PROJECT_NAME} "${SRC_DIR}/Main.cpp")
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${CAIRO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 
 if(WIN32)
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -31,5 +35,9 @@ if(WIN32)
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
       "${SDL2_LIB_DIR}/SDL2.dll"
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${FREETYPE_LIB_DIR}/freetype.dll"
       $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()
