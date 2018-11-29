@@ -13,3 +13,7 @@
 - Clone the repository
 - Generate project files.
 - Build & Run.
+
+## License
+
+- See License.MD
