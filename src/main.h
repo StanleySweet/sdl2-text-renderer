@@ -22,14 +22,15 @@
 #include <SDL.h>
 #include <ft2build.h>
 #include <cairo.h>
+#include <iostream>
 #include <string>
 
 #include FT_FREETYPE_H
 #include FT_BITMAP_H
 #include FT_OUTLINE_H
 
-#define APP_SDL_WINDOW_WIDTH 800
-#define APP_SDL_WINDOW_HEIGHT 600
+#define APP_SDL_WINDOW_WIDTH 1024			
+#define APP_SDL_WINDOW_HEIGHT 1024
 #define APP_SDL_WINDOW_NAME "SDL2Test"
 #define APP_SDL_WINDOW_FLAGS 0
 

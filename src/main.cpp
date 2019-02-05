@@ -19,7 +19,9 @@
  */
 
 #include "main.h"
-
+#include <locale>
+#include <codecvt>
+void cairo_print_image_atlas(SDL_Surface *surface, SDL_Window *window);
 int main(int argc, char *argv[])
 {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -38,16 +40,61 @@ int main(int argc, char *argv[])
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
-
-
+	cairo_print_image_atlas(surface, window);
+	SDL_Delay(3000);
+	SDL_FillRect(surface, nullptr, 0x000000);
 	cairo_text_render(surface, window);
 	freetype_text_render(surface, window);
 	SDL_Delay(3000);
+
 	SDL_FreeSurface(surface);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return 0;
+}
+
+
+static void cairo_print_image_atlas(SDL_Surface *surface, SDL_Window *window)
+{
+	cairo_surface_t *cairosurf = cairo_image_surface_create_for_data(
+		static_cast<uint8_t*>(surface->pixels),
+		CAIRO_FORMAT_RGB24,
+		surface->w,
+		surface->h,
+		surface->pitch);
+
+	int fontSize = 10;
+	cairo_t *cr = cairo_create(cairosurf);
+	cairo_set_source_rgb(cr, 1, 1, 1);
+	cairo_select_font_face(cr, "DejaVu Sans Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(cr, fontSize);
+
+	int start = 0x20;
+	int numberOfCharsPerLine = static_cast<int>(APP_SDL_WINDOW_WIDTH / fontSize * 1.55);
+	std::wstring line = L"";
+	for (int i = start; i < 0xFFFE; ++i)
+	{
+		if (0 != (i - start) % numberOfCharsPerLine)
+		{
+			line += static_cast<wchar_t>(i);
+		}
+		else if(line.length() != 0)
+		{
+			float valeur = ((i - start) / numberOfCharsPerLine * 15);
+			using convert_type = std::codecvt_utf8<wchar_t>;
+			std::wstring_convert<convert_type, wchar_t> converter;
+
+			//use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
+			std::string converted_str = converter.to_bytes(line);
+			cairo_print_text(cr, 0, valeur, converted_str.c_str());
+			SDL_UpdateWindowSurface(window);
+			line.clear();
+		}
+	}
+	cairo_surface_write_to_png(cairosurf, "file.png");
+	cairo_destroy(cr);
+	cairo_surface_destroy(cairosurf);
 }
 
 static void cairo_text_render(SDL_Surface *surface, SDL_Window *window)
@@ -80,6 +127,16 @@ static void cairo_print_text(cairo_t *cr, double x, double y, const char *utf8)
 {
 	cairo_move_to(cr, x, y);
 	cairo_show_text(cr, utf8);
+}
+
+static void freetype_print_image_atlas(SDL_Surface *surface, SDL_Window *window)
+{
+	FT_Library ftLib;
+	FT_Bitmap ftTarget;
+	FT_Face ftFace;
+	FT_Init_FreeType(&ftLib);
+	FT_New_Face(ftLib, "C:\\Windows\\Fonts\\OLDENGL.ttf", 0, &ftFace);
+	FT_Set_Char_Size(ftFace, 30 << 6, 30 << 6, 72, 72);
 }
 
 static void freetype_text_render(SDL_Surface *surface, SDL_Window *window)
